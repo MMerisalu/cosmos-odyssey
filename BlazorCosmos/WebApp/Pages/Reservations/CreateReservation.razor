@@ -1,0 +1,548 @@
+﻿@page "/Reservations/Create"
+@using System.ComponentModel.DataAnnotations;
+@inject CosmosService cosmos
+@inject NavigationManager navManager
+
+<PageTitle>Create Reservation</PageTitle>
+
+<h1>Create a new Reservation</h1>
+
+
+
+@{
+
+}
+
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+       <EditForm EditContext="@editContext" Context="SubmissionForm">
+           <DataAnnotationsValidator />
+
+
+            <div class="form-group">
+                <label class="control-label">First Name</label>
+                <input @bind-value="FirstName" class="form-control" />
+                <ValidationMessage For="() => FirstName" />
+            </div>
+            <div class="form-group">
+                <label asp-for="LastName" class="control-label">Last Name</label>
+                <input @bind-value="LastName" class="form-control" />
+                <ValidationMessage For="() => LastName" />
+            </div>
+            <div class="form-group">
+                <label asp-for="From" class="control-label">From</label>
+                <select class="form-control" @bind="From">
+                    <option selected disabled value="-1">Please Select</option>
+                    @if (FromOptions != null)
+                    {
+                        @foreach (var option in FromOptions)
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    }
+                </select>
+                <ValidationMessage For="() => From" />
+            </div>
+
+
+            @if (SelectedLegs?.Any() == true)
+            {
+                <h2>Selected Flights</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                              Company
+                            </th>
+
+                            <th>
+                                From
+                            </th>
+                            <th>
+                                To
+                            </th>
+
+                            <th>
+                                Price
+                            </th>
+
+                            <th>
+                               FlightStart
+                            </th>
+                            <th>
+                               FlightEnd
+                            </th>
+                            <th>
+                               TravelTime
+                            </th>
+                            <th>
+                               Distance
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in SelectedLegs)
+                        {
+                            <tr>
+                                <td>
+                                    @item.CompanyName
+                                </td>
+                                <td>
+                                    @item.From
+                                </td>
+                                <td>
+                                    @item.To    
+                                </td>
+                                <td>
+                                    @item.Price
+                                </td>
+                                <td>
+                                   @item.FlightStart
+                                </td>
+                                <td>
+                                    @item.FlightEnd
+                                </td>
+                                <td>
+                                    @item.TravelTime
+                                </td>
+                                <td>
+                                    @item.Distance
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (IsGetLegsVisible)
+                {
+
+                    <div class="form-group">
+                        <EditForm Model="@empty" OnSubmit="RemoveLastLeg">
+                            <button type="submit" class="btn btn-secondary">Remove Last Flight</button>
+                        </EditForm>
+                         <EditForm Model="@empty" OnSubmit="GetLegs">
+                            <button type="submit" class="btn btn-primary">Add Flight</button>
+                        </EditForm>
+                    </div>
+
+                }
+
+            }
+            else
+            {
+                @if (IsGetLegsVisible || (Providers?.Any() != true && !String.IsNullOrEmpty(From)))
+                {
+                    <p><i>No flights have been selected yet!</i></p>
+                    <EditForm Model="@empty" OnSubmit="GetLegs">
+                        <button type="submit" class="btn btn-primary">Add Flight</button>
+                    </EditForm>
+                }
+            }
+
+
+            @if (!IsGetLegsVisible && UnfilteredProviders?.Any() == true)
+            {
+                <h2>Flights to Choose From</h2>
+                <div class="form-group">
+                    <EditForm Model="@empty" OnSubmit="ApplyFilters">
+                        <label asp-for="CompanySearch">Search Company:</label>
+                        <input type="text" @bind-value="CompanySearch" />
+
+                        <label asp-for="SelectedSortOption" class="control-label">Sort:</label>
+                        <select @bind="SelectedSortOption" class="form-control">
+                            @if (SortOptions != null)
+                            {
+                                @foreach (var option in SortOptions)
+                                {
+                                    <option value="@option">@option</option>
+                                }
+                            }
+                        </select>
+
+                        <label asp-for="SelectedLegToOption" class="control-label">Destination:</label>
+                        <select @bind="SelectedLegToOption" class="form-control">
+                            @if (LegToOptions != null)
+                            {
+                                @foreach (var option in LegToOptions)
+                                {
+                                    <option value="@option">@option</option>
+                                }
+                            }
+                        </select>
+
+                        <button type="submit" class="btn btn-outline-primary">Apply</button>
+                    </EditForm>
+                </div>
+                @if (Providers?.Any() == true)
+                {
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Company
+                                </th>
+
+                                <th>
+                                    From
+                                </th>
+                                <th>
+                                    To
+                                </th>
+
+                                <th>
+                                    Price
+                                </th>
+
+                                <th>
+                                    FlightStart
+                                </th>
+                                <th>
+                                    FlightEnd
+                                </th>
+                                <th>
+                                    TravelTime
+                                </th>
+                                <th>
+                                   Distance
+                                </th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Providers)
+                            {
+                                <tr>
+                                    <td>
+                                        @item.CompanyName
+                                    </td>
+                                    <td>
+                                        @item.From
+                                    </td>
+                                    <td>
+                                        @item.To
+                                    </td>
+                                    <td>
+                                        @item.Price
+                                    </td>
+                                    <td>
+                                        @item.FlightStart
+                                    </td>
+                                    <td>
+                                        @item.FlightEnd
+                                    </td>
+                                    <td>
+                                        @item.TravelTime
+                                    </td>
+                                    <td>
+                                        @item.Distance
+                                    </td>
+                                    <td>
+                                        <EditForm Model="@empty" OnSubmit="() => AddLeg(item)">
+                                            <button type="submit" class="btn btn-secondary">Select</button>
+                                        </EditForm>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <h3>No flights match your search</h3>
+                }
+                <div class="form-group">
+                 @*    <EditForm Model="@empty" OnSubmit="@(() => AddLeg(item))">
+                        <button type="submit" class="btn btn-secondary">Select</button>
+                    </EditForm> *@
+
+                    <button @onclick="CancelSelectLeg" class="btn btn-outline-secondary">Cancel Add Flight</button>
+                </div>
+            }
+
+
+            <div class="form-group">
+                <label asp-for="To" class="control-label">To</label>
+                <input @bind-value="To" class="form-control" disabled="disabled" />
+            </div>
+            <div class="form-group">
+                <label asp-for="TotalQuotedPrice" class="control-label">Total Quoted Price</label>
+                <input @bind-value="TotalQuotedPrice" class="form-control" disabled="disabled" />
+            </div>
+            <div class="form-group">
+                <label asp-for="TotalDistance" class="control-label">Total Distance</label>
+                <input @bind-value="TotalDistance" class="form-control" disabled="disabled" />
+            </div>
+            <div class="form-group">
+                <label asp-for="TotalTravelTime" class="control-label">Total Travel Time</label>
+                <input class="form-control" disabled="disabled" value="@FormattedTotalTravelTime" />
+            </div>
+
+            @if (IsSubmitVisible)
+            {
+                <div class="form-group">
+                    <EditForm Model="@empty" OnSubmit="Submit">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </EditForm>
+                </div>
+                <ValidationSummary />
+
+            }
+
+        </EditForm>
+
+
+    </div>
+</div>
+
+<div>
+    <a href="/Reservations/List">Back to List</a>
+</div>
+
+
+
+
+@code {
+    private const string ALL_OPTION = "All";
+    EmptyViewModel empty = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        editContext = new EditContext(this);
+        errorMessages = new ValidationMessageStore(editContext);
+        StateHasChanged();
+
+        await base.OnInitializedAsync();
+
+        // Make sure we have the latest pricelist first
+        var priceList = await cosmos.RefreshPriceLists();
+        SelectedPriceListId = priceList!.Id;
+
+        // Load From Options only the first time
+        FromOptions = await cosmos.GetAllOrigins(SelectedPriceListId);
+
+        IsGetLegsVisible = false;
+        IsSubmitVisible = false;
+    }
+
+    private void ApplyFilters()
+    {
+        if (UnfilteredProviders?.Any() == true)
+        {
+
+            // build the from options, we could do this after company search... but I think we want the full list
+            var legs = UnfilteredProviders.Select(p => p.To).Distinct().ToList();
+            legs.Insert(0, ALL_OPTION);
+            LegToOptions = legs;
+
+            var query = UnfilteredProviders.AsQueryable();
+            if (!String.IsNullOrWhiteSpace(CompanySearch))
+                query = query.Where(p =>
+                    p.CompanyName!.Contains(CompanySearch, StringComparison.OrdinalIgnoreCase));
+
+            if (!String.IsNullOrWhiteSpace(SelectedLegToOption) && SelectedLegToOption != ALL_OPTION)
+                query = query.Where(p => p.To!.Equals(SelectedLegToOption));
+
+            switch (SelectedSortOption ?? String.Empty)
+            {
+                case nameof(FlightRouteDTO.Price):
+                    query = query.OrderBy(x => x.Price);
+                    break;
+                case nameof(FlightRouteDTO.Price) + " (reverse)":
+                    query = query.OrderByDescending(x => x.Price);
+                    break;
+                case nameof(FlightRouteDTO.TravelTime):
+                    query = query.OrderBy(x => x.TravelTime);
+                    break;
+                case nameof(FlightRouteDTO.TravelTime) + " (reverse)":
+                    query = query.OrderByDescending(x => x.TravelTime);
+                    break;
+                case nameof(FlightRouteDTO.Distance):
+                    query = query.OrderBy(x => x.Distance);
+                    break;
+                case nameof(FlightRouteDTO.Distance) + " (reverse)":
+                    query = query.OrderByDescending(x => x.Distance);
+                    break;
+            }
+
+            Providers = query.ToList();
+
+            IsGetLegsVisible = false;
+            IsSubmitVisible = false;
+
+        }
+        else
+        {
+            IsGetLegsVisible = true;
+            IsSubmitVisible = SelectedLegs.Any();
+        }
+    }
+
+    /// <summary>
+    /// Get the list of legs from the server
+    /// </summary>
+    /// <returns></returns>
+    private async Task GetLegs()
+    {
+        if (!String.IsNullOrWhiteSpace(From))
+        {
+            // Filter by the arrival time of the last leg
+            DateTimeOffset? minDepartureTime = null;
+            var lastFlight = SelectedLegs?.LastOrDefault();
+            var legFrom = From;
+            if (lastFlight != null)
+            {
+                var transitTime = TimeSpan.FromMinutes(15);
+                minDepartureTime = lastFlight.FlightEnd.Add(transitTime);
+                legFrom = lastFlight.To;
+            }
+
+            // Get list of providers for the next leg
+            UnfilteredProviders = await cosmos.GetLegsFromOrigin(SelectedPriceListId, legFrom);
+
+            ApplyFilters();
+        }
+        else
+        {
+            IsGetLegsVisible = true;
+            IsSubmitVisible = false;
+        }
+    }
+
+    /// <summary>
+    /// Close the select leg (Add Flight) form
+    /// </summary>
+    private void CancelSelectLeg()
+    {
+        Providers = null;
+        IsGetLegsVisible = true;
+        IsSubmitVisible = SelectedLegs.Any();
+        // Reset the Add Leg form search
+        CompanySearch = string.Empty;
+        SelectedLegToOption = ALL_OPTION;
+
+        StateHasChanged();
+    }
+
+    private void AddLeg(FlightRouteDTO selectedLeg)
+    {
+        this.SelectedLegs.Add(selectedLeg);
+
+        // Rebuild the readonly metadata fields
+        To = SelectedLegs.Last().To;
+        TotalQuotedPrice = SelectedLegs.Sum(p => p.Price);
+        TotalDistance = 0;
+        TotalTravelTime = TimeSpan.Zero;
+        foreach (var leg in SelectedLegs)
+        {
+            TotalTravelTime = TotalTravelTime.Value.Add(leg.TravelTime);
+            TotalDistance = TotalDistance.Value + leg.Distance;
+        }
+        CompanyNames = String.Join(", ", SelectedLegs.Select(l => l.CompanyName));
+
+        // Reset the Add Flights
+        CancelSelectLeg();
+    }
+
+    private void RemoveLastLeg()
+    {
+        if(SelectedLegs.Any())
+        {
+            SelectedLegs.Remove(SelectedLegs.Last());
+            StateHasChanged();
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (editContext.Validate())
+        {
+            if (String.IsNullOrWhiteSpace(this.From))
+                errorMessages.Add(() => this.From!, "Origin (From) is required!");
+            else
+            {
+                var dto = new ReservationDTO
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        FirstName = this.FirstName,
+                        LastName = this.LastName,
+                        PriceListId = SelectedPriceListId,
+                        From = this.From,
+                        To = this.To,
+                        Routes = this.SelectedLegs,
+                        CompanyNames = this.CompanyNames,
+                        LayOvers = String.Join(" - ", this.SelectedLegs.Select(x => x.From).Concat(new[] { this.SelectedLegs.Last().To }))
+                    };
+
+                // deliberately not sending the other computed values, the server is going to re-compute them anyway, save the bytes!
+                await cosmos.SubmitReservation(dto);
+                navManager.NavigateTo($"reservations/details/{dto.Id}");
+            }
+        }
+    }
+
+    #region MVC View Model ;)
+#pragma warning disable CS8618 // In Razor Page OnInitializedAsync is our constructor, ignore this warning for Blazor
+    private EditContext editContext;
+    private ValidationMessageStore errorMessages;
+#pragma warning restore CS8618
+    public Guid SelectedPriceListId { get; set; }
+    [Required(ErrorMessage = "First Name is required")]
+    public string FirstName { get; set; } = default!;
+    [Required(ErrorMessage = "Last Name is required")]
+    public string LastName { get; set; } = default!;
+    [Required(ErrorMessage = "From is required")]
+    public string? From { get; set; }
+    public List<string>? FromOptions { get; set; }
+
+    #region Selected Provider Legs
+
+    public ICollection<FlightRouteDTO> SelectedLegs { get; set; } = new HashSet<FlightRouteDTO>();
+    public decimal? TotalQuotedPrice { get; set; }
+    public long? TotalDistance { get; set; }
+    public TimeSpan? TotalTravelTime { get; set; }
+    public string FormattedTotalTravelTime { get => TotalTravelTime.HasValue ? $"{TotalTravelTime.Value.Days} days, {TotalTravelTime.Value.Hours} hours, {TotalTravelTime.Value.Minutes} minutes" : String.Empty; }
+    public string? CompanyNames { get; set; } = default!;
+
+    #endregion Selected Provider Legs
+
+    #region Provider Leg Selection
+    public List<string> SortOptions = new List<string>
+            {
+                nameof(FlightRouteDTO.Price), nameof(FlightRouteDTO.Price) + " (reverse)",
+                nameof(FlightRouteDTO.Distance), nameof(FlightRouteDTO.Distance) + " (reverse)",
+                nameof(FlightRouteDTO.TravelTime), nameof(FlightRouteDTO.TravelTime) + " (reverse)"
+            };
+    public string? SelectedSortOption { get; set; } //= nameof(FlightRouteDTO.Price);
+    public string? CompanySearch { get; set; }
+
+    public List<string> LegToOptions = new List<string>();
+    public string? SelectedLegToOption { get; set; } = "All";
+
+    /// <summary>
+    /// All Providers for the current Leg to add, unfiltered
+    /// </summary>
+    public IEnumerable<FlightRouteDTO>? UnfilteredProviders { get; set; }
+    /// <summary>
+    /// Filtered view of the legs to add
+    /// </summary>
+    public IEnumerable<FlightRouteDTO>? Providers { get; set; }
+    #endregion Provider Leg Selection
+
+    public bool IsGetLegsVisible { get; set; }
+
+    public bool IsSubmitVisible { get; set; }
+
+
+    // This is set through CODE, not the user!
+    public string? To { get; set; }
+
+    #endregion MVC View Model ;)
+
+    /// <summary>
+    /// Empty class for use in quick async submit buttons that do not need validation
+    /// </summary>
+    public class EmptyViewModel
+    { }
+}

@@ -1,0 +1,110 @@
+﻿@page "/Reservations/Delete/{Id:guid}"
+@inject CosmosService cosmos
+@inject NavigationManager navManager
+
+<PageTitle>Reservations</PageTitle>
+
+<h1>Reservation Delete</h1>
+@{
+
+}
+
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">
+            First Name
+        </dt>
+        <dd class="col-sm-10">
+            @reservation?.FirstName
+        </dd>
+        <dt class="col-sm-2">
+            Last Name
+        </dt>
+        <dd class="col-sm-10">
+            @reservation?.LastName
+        </dd>
+
+        <dt class="col-sm-2">
+            From
+        </dt>
+        <dd class="col-sm-10">
+            @reservation?.From
+        </dd>
+
+        <dt class="col-sm-2">
+            To
+        </dt>
+        <dd class="col-sm-10">
+            @reservation?.To
+        </dd>
+        <dt class="col-sm-2">
+            Total Price
+        </dt>
+        <dd class="col-sm-10">
+            @reservation?.TotalQuotedPrice
+        </dd>
+        <dt class="col-sm-2">
+            Total Flight Time
+        </dt>
+        <dd class="col-sm-10">
+            @reservation?.FormattedTotalTravelTime
+        </dd>
+        <dt class="col-sm-2">
+            Routes
+        </dt>
+        <dd class="col-sm-10">
+            @reservation?.LayOvers
+        </dd>
+        <dt class="col-sm-2">
+            Company Names
+        </dt>
+        <dd class="col-sm-10">
+            @reservation?.CompanyNames
+        </dd>
+        <dt class="col-sm-2">
+            Reservation Id
+        </dt>
+        <dd class="col-sm-10">
+            @reservation?.Id
+        </dd>
+
+    </dl>
+    <hr />
+
+</div>
+<div>
+     <button style="background-color:red; color:white"  @onclick="async () => await OnDeleteReservationAsync(Id)">Delete</button>  
+    <br />
+    <br />
+    <a href="Reservations/List">Back to List</a>
+</div>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+   
+    ReservationDTO? reservation;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        StateHasChanged();
+
+        reservation = await cosmos.GetReservationById(Id);
+    }
+
+
+    protected async Task OnDeleteReservationAsync(Guid id)
+    {
+   
+        await cosmos.DeleteReservation(id);
+        navManager.NavigateTo("Reservations/List");
+
+    }
+
+}
+

@@ -1,0 +1,89 @@
+﻿@using System.ComponentModel.DataAnnotations;
+@inject CosmosService cosmos
+@inject NavigationManager navManager
+
+<EditForm EditContext="@editContext" OnSubmit="@ApplySearch">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label class="control-label">Reservation ID</label>
+        <input class="form-control" @bind-value="viewModel.Id" />
+        <ValidationMessage For="() => viewModel.Id" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Last Name</label>
+        <input class="form-control" @bind-value="viewModel.LastName" />
+        <ValidationMessage For="() => viewModel.LastName" />
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Lookup</button>
+    </div>
+    <br/>
+    <ValidationMessage For="() => viewModel" />
+
+</EditForm>
+
+
+@code { 
+#pragma warning disable CS8618 // In Razor Page OnInitializedAsync is our constructor, ignore this warning for Blazor
+    private EditContext editContext;
+    private ValidationMessageStore errorMessages;
+#pragma warning restore CS8618
+    SearchBoxVM viewModel = new ();
+
+#pragma warning disable BL0007 // Ignore this rule for pass through parameters
+    [Parameter]
+    [Required(AllowEmptyStrings = false, ErrorMessage = "Reservation ID is required")]
+    public Guid? Id { get => viewModel.Id; set => viewModel.Id = value; }
+
+    [Parameter]
+    [Required(AllowEmptyStrings = false, ErrorMessage = "Last Name matching the Reservation ID is required")]
+    public string LastName { get => viewModel.LastName; set => viewModel.LastName = value; }
+#pragma warning restore BL0007
+
+    ReservationDTO? reservation;
+
+    protected async override Task OnInitializedAsync()
+    {
+        
+        editContext = new(viewModel);
+        errorMessages = new(editContext);
+        await base.OnInitializedAsync();
+    }
+
+    private async Task ApplySearch()
+    {
+        errorMessages.Clear();
+        if (editContext.Validate())
+        {
+            if (Id != null)
+            {
+                try
+                {
+                    reservation = await cosmos.ReservationSearch(Id.Value, LastName);
+                    StateHasChanged();
+
+                    // TODO: navigate
+                    navManager.NavigateTo($"Reservations/Details/{reservation!.Id}");
+                }
+                catch (Exception)
+                {
+                    // Ignore any errors
+                    errorMessages.Add(() => viewModel, "Reservation not found");
+                }
+            }
+            else
+            {
+                errorMessages.Add(() => viewModel.Id!, "Reservation ID is required");
+            }
+        }
+    }
+
+    public class SearchBoxVM
+    {
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Reservation ID is required")]
+        public Guid? Id { get; set; }
+
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Last Name matching the Reservation ID is required")]
+        public string LastName { get; set; } = default!;
+    }
+}

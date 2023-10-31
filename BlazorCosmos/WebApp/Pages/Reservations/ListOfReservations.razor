@@ -1,0 +1,109 @@
+﻿@page "/Reservations/List"
+@inject CosmosService cosmos
+
+<PageTitle>Reservations</PageTitle>
+
+<h1>Reservations</h1>
+<p>
+    <a href="/Reservations/Create">Create New</a>
+</p>
+
+@if (Reservations == null)
+{
+    <i>Loading...</i>
+}
+else if (Reservations.Count == 0)
+{
+    <p>No Reservations</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    First Name
+                </th>
+                <th>
+                    Last Name
+                </th>
+
+                <th>
+                    From
+                </th>
+
+                <th>
+                    To
+                </th>
+                <th>
+                    Total Distance
+                </th>
+                <th>
+                    Total Price
+                </th>
+                <th>
+                    Total Flight Time
+                </th>
+                <th>
+                  Reservation ID
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Reservations)
+            {
+                <tr>
+                    <td>
+                        @item.FirstName
+                    </td>
+                    <td>
+                        @item.LastName
+                    </td>
+
+                    <td>
+                        @item.From
+                    </td>
+
+                    <td>
+                        @item.To
+                    </td>
+                    <td>
+                        @item.TotalDistance
+                    </td> 
+                     <td>
+                        @item.TotalQuotedPrice
+                    </td> 
+                     <td>
+                        @item.FormattedTotalTravelTime
+                    </td> 
+                    <td>
+                        @item.Id
+                    </td>
+                    <td>
+                        <a href="@($"Reservations/Details/{item.Id}")">Details</a> |
+                        <a href="@($"Reservations/Delete/{item.Id}")">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+
+
+
+}
+
+
+
+
+@code {
+    private List<ReservationDTO>? Reservations;
+    protected async override Task OnInitializedAsync()
+    {
+        StateHasChanged();
+        await base.OnInitializedAsync();
+        Reservations = (await cosmos.GetAllReservations()).ToList();
+    }
+}

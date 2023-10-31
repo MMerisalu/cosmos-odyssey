@@ -1,0 +1,47 @@
+﻿@page "/PriceLists/List"
+@using BlazorWebApp.DTO;
+@using BlazorWebApp.Models;
+@using BlazorWebApp.Services;
+
+@inject CosmosService cosmos
+
+<PageTitle>Price Lists</PageTitle>
+
+<h1>Price Lists</h1>
+@if (PriceLists != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Valid Until</th>
+                <th>Number of Legs</th>
+                <th>Number of Reservation</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in PriceLists)
+            {         
+            <tr>
+                <td>@item.ValidUntil</td>
+                <td>@item.NumberOfLegs</td>
+                <td>@item.NumberOfReservation</td>
+            </tr>
+
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <i>Loading...</i>
+}
+
+@code {
+    private List<PriceListDTO>? PriceLists;
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        PriceLists = (await cosmos.GetAllPricelists()).ToList();
+    }
+}

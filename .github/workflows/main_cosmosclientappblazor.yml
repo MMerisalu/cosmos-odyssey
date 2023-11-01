@@ -32,7 +32,7 @@ jobs:
         run: dotnet build ./BlazorCosmos/WebApp/BlazorWebApp.csproj --configuration Debug
 
       - name: dotnet publish
-        run: dotnet publish -c Debug -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish ./BlazorCosmos/WebApp/BlazorWebApp.csproj -c Debug -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3

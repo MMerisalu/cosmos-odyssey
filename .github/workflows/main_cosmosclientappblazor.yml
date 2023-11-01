@@ -23,7 +23,7 @@ jobs:
           include-prerelease: true
           
       - name: Restore NuGet
-        run: dotnet restore ./BlazorCosmos/BlazorCosmos.sln
+        run: dotnet restore **/BlazorCosmos.sln
         
       - name: Build with dotnet
         run: dotnet build ./BlazorCosmos/WebApp/BlazorWebApp.csproj --configuration Release

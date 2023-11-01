@@ -489,9 +489,28 @@
 #pragma warning restore CS8618
     public Guid SelectedPriceListId { get; set; }
     [Required(ErrorMessage = "First Name is required")]
-    public string FirstName { get; set; } = default!;
+    public string FirstName
+    {
+        get => _firstName; 
+        set
+        {
+            _firstName = value;
+            editContext.Validate();
+        }
+    }
+    private string _firstName = default!;
     [Required(ErrorMessage = "Last Name is required")]
-    public string LastName { get; set; } = default!;
+    public string LastName
+    {
+        get => _lastName; 
+        set
+        {
+            _lastName = value;
+            editContext.Validate();
+        }
+    }
+    private string _lastName = default!;
+
     [Required(ErrorMessage = "From is required")]
     public string? From { get; set; }
     public List<string>? FromOptions { get; set; }
